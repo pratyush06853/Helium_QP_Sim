@@ -413,7 +413,7 @@ def Get_P():
     '''
     returns f which can be used to map momentum in eV to energy in eV
     '''
-    Dispersion_data = pd.read_table("Dispersion_relation_He.csv", sep=",", usecols=['Momentum', 'Energy'])
+    Dispersion_data = pd.read_table("/home/kumarpat/Helium_QP_Sim/Dispersion_relation_He.csv", sep=",", usecols=['Momentum', 'Energy'])
     Dispersion_data['Momentum']=Dispersion_data['Momentum']*1e3
     Dispersion_data['Energy']=Dispersion_data['Energy']*1e-3
 
@@ -425,7 +425,7 @@ def Get_V():
     '''
     returns h which can be used to map momentum in eV to velocity in m/s
     '''
-    Velocity_data = pd.read_table("Momentum_Velocity_relation_He.csv", sep=",", usecols=['Momentum', 'velocity'])
+    Velocity_data = pd.read_table("/home/kumarpat/Helium_QP_Sim/Momentum_Velocity_relation_He.csv", sep=",", usecols=['Momentum', 'velocity'])
     Velocity_data['Momentum']=Velocity_data['Momentum']*1e3
     Velocity_data['velocity']=Velocity_data['velocity']
 
