@@ -31,15 +31,23 @@ QPPartition = IR(Energy)
 
 
 
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-7.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=6.0
+
+
 Radius_CPD= 38
 Radius_Helium= 30
-Midpoint=-7.645
+Midpoint=0.11
 Height_CPD=19.2-Midpoint
-half_height_Helium=6.0
+half_height_Helium=13.75
+
 
 #tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/4mm/Combined4mm_ForHeSim.root")
-tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/12mm/Combined12mm_ForHeSim.root")
-#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/12mm/Combined12mm_ForHeSim.root")
+tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
 
 tree3=tree["Event"]
 arr3 = tree3.arrays(tree3.keys())
