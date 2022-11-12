@@ -12,7 +12,6 @@ QP = pd.read_table("QP.csv", sep=",", usecols=['Energy', 'Partition'])
 Infrared = pd.read_table("Infrared.csv", sep=",", usecols=['Energy', 'Partition'])
 
 
-
 Energy = np.linspace(0, 10, num=100000)
 #f is singlet, g is triplet as the paper had it reversed
 
