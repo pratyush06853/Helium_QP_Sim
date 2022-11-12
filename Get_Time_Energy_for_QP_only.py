@@ -6,15 +6,48 @@ sys.path.append("/home/kumarpat/Helium_QP_Sim")
 from Functions import *
 from scipy.interpolate import interp1d
 
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-11.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=2.0
+
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-7.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=6.0
+
+
 Radius_CPD= 38
 Radius_Helium= 30
-Midpoint=-7.645
+Midpoint=-5.645
 Height_CPD=19.2-Midpoint
-half_height_Helium=6.0
+half_height_Helium=8.0
+
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-1.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=12.0
 
 
-Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/12mm/Helium_0.pkl')
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=0.11
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=13.75
+
+
+#Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/4mm/Helium_0.pkl')
+#Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/12mm/Helium_0.pkl')
+Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/16mm/Helium_0.pkl')
+#Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/24mm/Helium_0.pkl')
+#Helium = pd.read_pickle('/home/kumarpat/Helium_QP_Sim/27point5mm/Helium_0.pkl')
+
+
 Collected_Energy=np.zeros(Helium.shape[0])
+Prompt_scintillation=np.zeros(Helium.shape[0])
 Time_collection=np.zeros(Helium.shape[0])
 Time_collection_mode=np.zeros(Helium.shape[0])
 X_ini=np.zeros(Helium.shape[0])
@@ -55,6 +88,12 @@ for i in range(Helium.shape[0]):
     Vz_unit_vector=np.cos(phi)
 
 
+    Prompt = Get_PromptEnergy_from_recoil_position( Helium['singlet_photon_mean'][i],\
+                                                   Helium['IR_photon_mean'][i],\
+                                               Intial_X, Intial_Y, Intial_Z, \
+                                               Radius_Helium, Radius_CPD,Height_CPD)
+
+
 
     X,Y,Z,nx, ny, nz,Energy,Momentum,Velocity=Remove_the_downward_QP(Vx_unit_vector,Vy_unit_vector,\
                                                  Vz_unit_vector,  X1, Y1, Z1,\
@@ -74,7 +113,8 @@ for i in range(Helium.shape[0]):
                                                 ny_He, nz_He,Energy,Momentum,Velocity,theta_I,critical_Angle_of_incidence)
 
 
-    nx_V,ny_V,nz_V,X_He_S,Y_He_S,Z_He_S,Energy,Velocity,Momentum=change_direction(nx_He_S,ny_He_S,nz_He_S,\
+    nx_V,ny_V,nz_V,X_He_S,Y_He_S,Z_He_S,Energy,Velocity,Momentum=\
+                                  change_direction(nx_He_S,ny_He_S,nz_He_S,\
                                           X_He_S,Y_He_S,Z_He_S,theta_I_He_S,Energy,Velocity,Momentum)
 
 
@@ -87,7 +127,8 @@ for i in range(Helium.shape[0]):
                     position_inty, position_intz=get_Time_QP(X_He_S,Y_He_S,Z_He_S,X_CPD,Y_CPD,Z_CPD,Velocity,\
                                                  Velocity_atom,Energy,Momentum,Intial_X,Intial_Y,Intial_Z)
 
-    Collected_Energy[i]=(9*1e-3)*np.size(Energy_final)
+    Collected_Energy[i]= np.size(Energy_final)
+    Prompt_scintillation[i]=Prompt
     Time_collection[i]=total_time_microseconds.mean()
     n,bins=np.histogram(total_time_microseconds, bins=np.arange(0,1000,10))
     Time_collection_mode[i]= bins[np.argmax(n)]
@@ -97,6 +138,7 @@ for i in range(Helium.shape[0]):
 
 dataset = pd.DataFrame()
 dataset['Evaporation_energy'] = Collected_Energy
+dataset['Prompt_energy'] = Prompt_scintillation
 dataset['Delay_time'] = Time_collection_mode
 dataset['X'] = X_ini
 dataset['Y'] = Y_ini
