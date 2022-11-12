@@ -4,7 +4,6 @@ import pandas as pd
 import random
 import Functions
 from scipy.interpolate import interp1d
-#ps2.load_words()
 
 
 Singlet= pd.read_table("Singlet.csv", sep=",", usecols=['Energy', 'Partition'])
@@ -31,6 +30,12 @@ QPPartition = IR(Energy)
 
 
 
+Radius_CPD= 38
+Radius_Helium= 30
+Midpoint=-11.645
+Height_CPD=19.2-Midpoint
+half_height_Helium=2.0
+
 #Radius_CPD= 38
 #Radius_Helium= 30
 #Midpoint=-7.645
@@ -38,16 +43,34 @@ QPPartition = IR(Energy)
 #half_height_Helium=6.0
 
 
-Radius_CPD= 38
-Radius_Helium= 30
-Midpoint=0.11
-Height_CPD=19.2-Midpoint
-half_height_Helium=13.75
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-5.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=8.0
+
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-1.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=12.0
 
 
-#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/4mm/Combined4mm_ForHeSim.root")
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=0.11
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=13.75
+
+
+
+tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/4mm/Combined4mm_ForHeSim.root")
 #tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/12mm/Combined12mm_ForHeSim.root")
-tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/16mm/Combined27point5mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/24mm/Combined27point5mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
+
+
 
 tree3=tree["Event"]
 arr3 = tree3.arrays(tree3.keys())
@@ -82,4 +105,4 @@ Helium.reset_index(inplace=True)
 No_of_events_per_file=1000
 
 for i in range(int(Helium.shape[0]/1000)-1):
-    Helium[int(i*No_of_events_per_file):int((i+1)*No_of_events_per_file)].to_pickle("12mm/Helium_"+ str(i)+".pkl")
+    Helium[int(i*No_of_events_per_file):int((i+1)*No_of_events_per_file)].to_pickle("4mm/Helium_"+ str(i)+".pkl")
