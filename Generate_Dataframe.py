@@ -29,11 +29,11 @@ QPPartition = IR(Energy)
 
 
 
-Radius_CPD= 38
-Radius_Helium= 30
-Midpoint=-11.645
-Height_CPD=19.2-Midpoint
-half_height_Helium=2.0
+#Radius_CPD= 38
+#Radius_Helium= 30
+#Midpoint=-11.645
+#Height_CPD=19.2-Midpoint
+#half_height_Helium=2.0
 
 #Radius_CPD= 38
 #Radius_Helium= 30
@@ -55,19 +55,19 @@ half_height_Helium=2.0
 #half_height_Helium=12.0
 
 
-#Radius_CPD= 38
-#Radius_Helium= 30
-#Midpoint=0.11
-#Height_CPD=19.2-Midpoint
-#half_height_Helium=13.75
+Radius_CPD= 38
+Radius_Helium= 30
+Midpoint=0.11
+Height_CPD=19.2-Midpoint
+half_height_Helium=13.75
 
 
-
-tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/4mm/Combined4mm_ForHeSim.root")
+# You need to get this value from Geant
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/4mm/Combined4mm_ForHeSim.root")
 #tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/12mm/Combined12mm_ForHeSim.root")
-#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/16mm/Combined27point5mm_ForHeSim.root")
-#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/24mm/Combined27point5mm_ForHeSim.root")
-#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/16mm/Combined16mm_ForHeSim.root")
+#tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/24mm/Combined24mm_ForHeSim.root")
+tree =uproot.open("/Volumes/GoogleDrive/My Drive/GraduateWork/HeRALD/raw_geant_outputdir/ProcessedFiles/Run30/27point5mm/Combined27point5mm_ForHeSim.root")
 
 
 
@@ -77,6 +77,9 @@ df_uproot3 = pd.DataFrame(arr3)
 
 t =tree["Information"]
 a = t.arrays(t.keys())
+TotalTime_days= get_TotalTime_days(a)
+TotalTime_seconds=get_TotalTime_seconds(a)
+
 
 ##Select only Helium things
 Helium = df_uproot3[[b'E_He_electron',b'X_He_electron',b'Y_He_electron',b'Z_He_electron',b'TotalE_He',b'TotalE_CPD']]
@@ -104,4 +107,4 @@ Helium.reset_index(inplace=True)
 No_of_events_per_file=1000
 
 for i in range(int(Helium.shape[0]/1000)-1):
-    Helium[int(i*No_of_events_per_file):int((i+1)*No_of_events_per_file)].to_pickle("4mm/Helium_"+ str(i)+".pkl")
+    Helium[int(i*No_of_events_per_file):int((i+1)*No_of_events_per_file)].to_pickle("27point5mm/Helium_"+ str(i)+".pkl")

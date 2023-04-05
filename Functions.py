@@ -3,9 +3,66 @@ import pandas as pd
 import random
 from scipy.interpolate import interp1d
 
+def Get_P(filename):
+    '''
+    returns f which can be used to map momentum in eV to energy in eV
+    '''
+    Dispersion_data = pd.read_table(filename, sep=",", usecols=['Momentum', 'Energy'])
+    Dispersion_data['Momentum']=Dispersion_data['Momentum']*1e3
+    Dispersion_data['Energy']=Dispersion_data['Energy']*1e-3
 
-def Boltzman_factor_without_V(p,T_in_K,omega):
-    return 1.0/(np.exp(omega(p)/(T_in_K*0.025/300))-1)
+    #f = interp1d(Dispersion_data['Momentum'],Dispersion_data['Energy'],fill_value=(0, 0), bounds_error=False)
+
+
+    omega=np.polynomial.polynomial.Polynomial.fit(Dispersion_data['Momentum'], Dispersion_data['Energy'], 7, window=[0, 4900] )
+    omega_params =omega.convert().coef
+
+    #return f
+    return omega_params
+
+
+def Omega(p,omega_params):
+    '''
+    returns f which can be used to map momentum in eV to energy in eV
+    '''
+    e=np.zeros(np.size(p))
+    for i in range(len(omega_params)):
+        e += omega_params[i]*pow(p, i)
+    return e #returns energy in eV
+
+
+def Get_V(filename):
+    '''
+    returns h which can be used to map momentum in eV to velocity in m/s
+    '''
+    Velocity_data = pd.read_table(filename, sep=",", usecols=['Momentum', 'velocity'])
+    Velocity_data['Momentum']=Velocity_data['Momentum']*1e3
+    Velocity_data['velocity']=Velocity_data['velocity']
+
+
+    #h = interp1d(Velocity_data['Momentum'],Velocity_data['velocity'],fill_value=(0, 0), bounds_error=False)
+
+    domega=np.polynomial.polynomial.Polynomial.fit(Velocity_data['Momentum'], Velocity_data['velocity'], 9, window=[0, 4900] )
+    domega_params =domega.convert().coef
+
+
+    #return h
+    return domega_params
+
+
+def dOmega(p,domega_params):
+    '''
+    returns h which can be used to map momentum in eV to velocity in m/s
+    '''
+    e=np.zeros(np.size(p))
+    for i in range(len(domega_params)):
+        e += domega_params[i]*pow(p, i)
+    return e #returns energy in eV
+
+
+
+def Boltzman_factor_without_V(p,T_in_K,omega_params):
+    return 1.0/(np.exp(Omega(p,omega_params)/(T_in_K*0.025/300))-1)
 
 
 def Energy_partion(TotalE_He,f,g,IR):
@@ -37,13 +94,14 @@ def Get_MomentumDistribution(N,amplitude1, peak1,spread1, amplitude2,peak2, spre
     return np.random.normal(peak1, spread1, N)*a + np.random.normal(peak2, spread2, N)*b
 
 
-def Get_MomentumDistribution_UsingTemp(N, p ,normalisation, functional_form):
+def Get_MomentumDistribution_UsingTemp(N,momentum_sampler):
 
-    return np.asarray(random.choices(p, functional_form/normalisation, k=N))
+    #return np.asarray(random.choices(p, functional_form, k=N))
+    return np.asarray(random.choices(momentum_sampler, k=N))
 
 
 
-def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,p ,normalisation, functional_form,omega,domega):
+def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,momentum_sampler,omega_params,domega_params):
     '''
     We generate the intial QP particle velocity, momentum and energy information, we also return the intial position
     of the interaction.
@@ -51,14 +109,15 @@ def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,p 
 
     N=Ein_QP_channel/0.001
 
-    Energy=np.zeros(int(2*N))
-    Velocity=np.zeros(int(2*N))
-    Momentum=np.zeros(int(2*N))
+    Energy=np.zeros(int(1.5*N))
+    Velocity=np.zeros(int(1.5*N))
+    Momentum=np.zeros(int(1.5*N))
 
     #Momentum=Get_MomentumDistribution( int(2*N), 0.00116, 800, 100, 0.00116, 3800, 100)
-    Momentum=Get_MomentumDistribution_UsingTemp(int(2*N), p ,normalisation, functional_form)
-    Energy=omega(Momentum)
-    Velocity=domega(Momentum)
+    Momentum=Get_MomentumDistribution_UsingTemp(int(1.5*N), momentum_sampler)
+    Energy=Omega(Momentum,omega_params)
+    Velocity=dOmega(Momentum,domega_params)
+
 
     Total_energy= np.cumsum(Energy)
 
@@ -112,7 +171,6 @@ def Get_PromptEnergy_plot(N_Photons,X,Y,Z,Radius_Helium,Height_CPD):
     R_square=X_He**2+Y_He**2
 
     survived_singlet=X_He[R_square<Radius_Helium**2]
-    print(N_Photons,np.size(nz),np.size(survived_singlet))
 
 
 
@@ -199,7 +257,6 @@ def Get_PromptEnergy_from_recoil_position(N_Photons,N_IR,X,Y,Z,Radius_Helium,Rad
 
 
 
-    #print(N_Photons,np.size(nz),np.size(survived_singlet))
 
     return 0.016*1000*np.size(survived_singlet)+ 0.0001*1000*np.size(survived_IR)
 
@@ -408,30 +465,13 @@ def get_Time_QP(X_He_S,Y_He_S,Z_He_S,X_CPD,Y_CPD,Z_CPD,Velocity,\
     total_time=time_helium+time_vacuum
     return Energy,total_time,Intial_X,Intial_Y,Intial_Z
 
+def get_timeStamp_AmplitudeMean_Sim(E):
+    xdata =E[0]
+    ydata = np.zeros(100)
+    for i in range(100):
+        ydata[i]= np.mean(E[1:][:].T[i])
+    return xdata,ydata
 
-def Get_P():
-    '''
-    returns f which can be used to map momentum in eV to energy in eV
-    '''
-    Dispersion_data = pd.read_table("/home/kumarpat/Helium_QP_Sim/Dispersion_relation_He.csv", sep=",", usecols=['Momentum', 'Energy'])
-    Dispersion_data['Momentum']=Dispersion_data['Momentum']*1e3
-    Dispersion_data['Energy']=Dispersion_data['Energy']*1e-3
-
-    f = interp1d(Dispersion_data['Momentum'],Dispersion_data['Energy'],fill_value=(0, 0), bounds_error=False)
-    return f
-
-
-def Get_V():
-    '''
-    returns h which can be used to map momentum in eV to velocity in m/s
-    '''
-    Velocity_data = pd.read_table("/home/kumarpat/Helium_QP_Sim/Momentum_Velocity_relation_He.csv", sep=",", usecols=['Momentum', 'velocity'])
-    Velocity_data['Momentum']=Velocity_data['Momentum']*1e3
-    Velocity_data['velocity']=Velocity_data['velocity']
-
-
-    h = interp1d(Velocity_data['Momentum'],Velocity_data['velocity'],fill_value=(0, 0), bounds_error=False)
-    return h
 
 
 
