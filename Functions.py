@@ -31,6 +31,18 @@ def Omega(p,omega_params):
     return e #returns energy in eV
 
 
+def Get_NoOfQuasiparticles(qp_energy):
+    #returns the mean number of quasiparticles given
+    # the energy in eV in the QP channel
+
+    #based on a linear fit after calculating the nQPs
+    # using random sampling of the dispersion relation
+    # given a Bose-Einstein distribution for nD/dp
+
+    slope_t2, b_t2 = 1244.04521473, 29.10987933 #linear fit params
+    return slope_t2*qp_energy + b_t2
+
+
 def Get_V(filename):
     '''
     returns h which can be used to map momentum in eV to velocity in m/s
@@ -94,36 +106,38 @@ def Get_MomentumDistribution(N,amplitude1, peak1,spread1, amplitude2,peak2, spre
     return np.random.normal(peak1, spread1, N)*a + np.random.normal(peak2, spread2, N)*b
 
 
-def Get_MomentumDistribution_UsingTemp(N,momentum_sampler):
+#def Get_MomentumDistribution_UsingTemp(N,momentum_sampler):
 
     #return np.asarray(random.choices(p, functional_form, k=N))
-    return np.asarray(random.choices(momentum_sampler, k=N))
+#    return np.asarray(random.choices(momentum_sampler, k=N))
 
+def Get_MomentumDistribution_UsingTemp(N,p,y):
+    x=np.int_(y*N)
+    x[-1]=x[-1]+ (N-np.sum(x))
+    df = pd.DataFrame(({'Number': x[1:] ,\
+          'momentum': p[1:]}) )
 
+    df = df.loc[df.index.repeat(df['Number'])]
 
-def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,momentum_sampler,omega_params,domega_params):
+    return np.asarray(df['momentum'])
+
+def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,p,pdf,omega_params,domega_params):
     '''
     We generate the intial QP particle velocity, momentum and energy information, we also return the intial position
     of the interaction.
     '''
 
-    N=Ein_QP_channel/0.001
+    N= Get_NoOfQuasiparticles(Ein_QP_channel)
 
-    Energy=np.zeros(int(1.5*N))
-    Velocity=np.zeros(int(1.5*N))
-    Momentum=np.zeros(int(1.5*N))
+
+    Energy=np.zeros(int(N))
+    Velocity=np.zeros(int(N))
+    Momentum=np.zeros(int(N))
 
     #Momentum=Get_MomentumDistribution( int(2*N), 0.00116, 800, 100, 0.00116, 3800, 100)
-    Momentum=Get_MomentumDistribution_UsingTemp(int(1.5*N), momentum_sampler)
+    Momentum=Get_MomentumDistribution_UsingTemp(int(N), p,pdf)
     Energy=Omega(Momentum,omega_params)
     Velocity=dOmega(Momentum,domega_params)
-
-
-    Total_energy= np.cumsum(Energy)
-
-    Energy = Energy[ ( Total_energy < Ein_QP_channel ) ] # energy should be less in evaporation channel
-    Momentum = Momentum[ ( Total_energy < Ein_QP_channel ) ]
-    Velocity = Velocity[ ( Total_energy < Ein_QP_channel ) ]
 
 
 
@@ -134,6 +148,7 @@ def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,mo
     Momentum=Momentum[Energy>0.00062] # QE threshold
     Velocity=Velocity[Energy>0.00062]
     Energy=Energy[Energy>0.00062]
+
     X=x*np.ones(np.size(Momentum))
     Y=y*np.ones(np.size(Momentum))
     Z=z*np.ones(np.size(Momentum))
@@ -141,6 +156,9 @@ def Get_Energy_Velocity_Momentum_Position_df_from_recoil(Ein_QP_channel,x,y,z,mo
     Intial_X=x
     Intial_Y=y
     Intial_Z=z
+
+
+
 
 
 
@@ -471,6 +489,111 @@ def get_timeStamp_AmplitudeMean_Sim(E):
     for i in range(100):
         ydata[i]= np.mean(E[1:][:].T[i])
     return xdata,ydata
+
+
+def Get_Energy_Velocity_Momentum_Position_Dataframe_from_recoil(Ein_QP_channel,x,y,z,momentum_sampler,omega_params,domega_params):
+    '''
+    We generate the intial QP particle velocity, momentum and energy information, we also return the intial position
+    of the interaction.
+    '''
+
+    N= Get_NoOfQuasiparticles(Ein_QP_channel)
+
+
+    Energy=np.zeros(int(N))
+    Velocity=np.zeros(int(N))
+    Momentum=np.zeros(int(N))
+
+    #Momentum=Get_MomentumDistribution( int(2*N), 0.00116, 800, 100, 0.00116, 3800, 100)
+    Momentum=Get_MomentumDistribution_UsingTemp(int(N), momentum_sampler)
+    Energy=Omega(Momentum,omega_params)
+    Velocity=dOmega(Momentum,domega_params)
+
+
+    #Total_energy= np.cumsum(Energy)
+
+    #Energy = Energy[ ( Total_energy < Ein_QP_channel ) ] # energy should be less in evaporation channel
+    #Momentum = Momentum[ ( Total_energy < Ein_QP_channel ) ]
+    #Velocity = Velocity[ ( Total_energy < Ein_QP_channel ) ]
+
+
+
+    Energy=Energy[Momentum>1100]  # no finite lifetime QP
+    Velocity=Velocity[Momentum>1100]
+    Momentum=Momentum[Momentum>1100]
+
+    Momentum=Momentum[Energy>0.00062] # QE threshold
+    Velocity=Velocity[Energy>0.00062]
+    Energy=Energy[Energy>0.00062]
+    X=x*np.ones(np.size(Momentum))
+    Y=y*np.ones(np.size(Momentum))
+    Z=z*np.ones(np.size(Momentum))
+
+    Intial_X=x
+    Intial_Y=y
+    Intial_Z=z
+
+    Live_Status=np.zeros(np.size(Momentum))
+
+    #get random momentum vectors
+    u = np.random.uniform(low=0, high=1,size=np.size(Momentum))
+    theta=2*np.pi*u
+    phi= np.arccos(1-2*u)
+
+    Vx_unit_vector=np.sin(phi)*np.cos(theta)
+    Vy_unit_vector=np.sin(phi)*np.sin(theta)
+    Vz_unit_vector=np.cos(phi)
+
+
+    df = pd.DataFrame(({'Energy1': Energy ,\
+          'Momentum1': Momentum,\
+          'Velocity1': Velocity,\
+          'X0':Intial_X ,\
+          'Y0': Intial_Y ,\
+          'Z0': Intial_Z,\
+          'nx':Vx_unit_vector,\
+          'ny':Vy_unit_vector,\
+          'nz':Vz_unit_vector,\
+          'ReachHeSurface':Live_Status}) )
+
+    df= df.rename(columns = {'index':'index'})
+
+
+
+    return df
+
+def get_interaction_point(df):
+    r=30
+    z=13.75
+    a= df['nx']**2 + df['ny']**2
+    b=  2*(df['nx'] +df['ny'])
+    c= df['X0']**2+df['Y0']**2-r**2
+    sol1 =( -b + np.sqrt(b**2 -4*a*c) )/ (2*a)
+    sol2 =( -b - np.sqrt(b**2 -4*a*c) )/ (2*a)
+    k=np.where(sol1>sol2, sol1,sol2) #because x0,y0 <R therefore products of root <0
+    X1 = df['X0']+ k*df['nx']
+    Y1 = df['Y0']+ k*df['ny']
+    Z1 = df['Z0']+ k*df['nz']
+
+    #X2=np.where( df['nz'] > 0.0, df['X0'] + df['nx'] * (z-df['Z0'])/(df['nz']), \
+    #                                 df['X0'] + df['nx'] * (z-df['Z0'])/(df['nz'])  )
+
+    Y2=np.where( df['nz'] < 0.0, df['Y0'] + df['ny'] * (-z-df['Z0'])/(df['nz']), \
+                                             df['Y0'] + df['ny'] * (-z-df['Z0'])/(df['nz'])  )
+
+    Z2=np.where( df['nz'] > 0.0, z, -z)
+
+    distance1 = (X1- df['X0'])**2+ (Y1- df['Y0'])**2+(Z1- df['Z0'])**2
+
+    distance2 = (X2- df['X0'])**2+ (Y2- df['Y0'])**2+(Z2- df['Z0'])**2
+
+    newX=np.where( distance1 < distance2, X1 , X2)
+    newY=np.where( distance1 < distance2, Y1 , Y2)
+    newZ=np.where( distance1 < distance2, Z1 , Z2)
+
+    return X1,Y1,Z1
+    #return newX,newY,newZ
+
 
 
 
